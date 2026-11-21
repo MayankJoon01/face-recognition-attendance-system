@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block content %}
+<h2>Unknown face alerts</h2>
+<div class="card"><p class="muted">Faces the camera saw during live sessions that matched nobody.</p>
+{% if rows %}<form method="post" action="{{ url_for('alerts_clear') }}" onsubmit="return confirm('Delete all alert photos log?')">
+<input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="danger">Clear log</button></form><br>{% endif %}
+<div class="grid">{% for r in rows %}<div>{% if r.snapshot %}<img src="{{ url_for('snapshot', name=r.snapshot) }}">{% endif %}
+<small class="muted">{{ r.time.replace('T',' ') }}<br>{{ r.class_name or '' }} {{ r.subject_name or '' }}</small></div>
+{% else %}<p class="muted">Nothing to show.</p>{% endfor %}</div></div>
+{% endblock %}

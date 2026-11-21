@@ -1,0 +1,44 @@
+{% extends "base.html" %}{% block content %}
+<h2>Live attendance</h2>
+{% if error %}<div class="flash error">{{ error }}</div>{% endif %}
+{% if running %}
+<div class="card"><span class="pill">LIVE</span> <b>{{ sess.class_name }} · {{ sess.subject_name }}</b>
+<span id="count" class="muted"></span>
+<form method="post" action="{{ url_for('live_stop') }}" style="display:inline;float:right"><input type="hidden" name="csrf" value="{{ csrf_token() }}">
+{% if telegram_on() %}<label><input type="checkbox" name="alerts" value="1" checked> Send absence alerts on Telegram</label> {% endif %}<button class="danger">Stop session</button></form>
+<div style="margin-top:8px"><button type="button" id="voiceBtn" class="alt" style="background:transparent;color:var(--accent);border:1px solid var(--accent)">🔇 Enable voice greeting</button></div></div>
+<div class="two"><div class="card"><img class="feed" src="{{ url_for('video_feed') }}" alt="live camera">
+<p class="muted">Each person looks at the camera and blinks once to be marked.</p></div>
+<div class="card"><h3>Marked present</h3><table id="marks"><tr><td class="muted">Waiting…</td></tr></table></div></div>
+<script>
+let voiceOn=false,seen=null;
+function say(t){try{const u=new SpeechSynthesisUtterance(t);u.rate=0.95;speechSynthesis.speak(u)}catch(e){}}
+function greet(n){const h=new Date().getHours();say((h<12?"Good morning":h<17?"Good afternoon":"Good evening")+", "+n+". Your attendance is marked.")}
+document.getElementById("voiceBtn").onclick=function(){voiceOn=!voiceOn;
+ this.textContent=voiceOn?"🔊 Voice greeting on":"🔇 Enable voice greeting";if(voiceOn)say("Voice greeting enabled")};
+async function poll(){try{const r=await fetch("{{ url_for('api_status') }}");const d=await r.json();
+if(!d.running){location.reload();return}
+if(seen===null){seen=new Set(d.marks.map(m=>m.user_id))}
+else{d.marks.filter(m=>!seen.has(m.user_id)).reverse().forEach(m=>{seen.add(m.user_id);if(voiceOn)greet(m.name)})}
+document.getElementById("count").textContent=" – "+d.present+" / "+d.total+" present";
+const t=document.getElementById("marks");t.innerHTML="";
+d.marks.forEach(m=>{const tr=t.insertRow();
+tr.insertCell().innerHTML=m.snapshot?'<img class="thumb" src="/snapshot/'+m.snapshot+'">':"";
+tr.insertCell().textContent=m.name;tr.insertCell().textContent=m.time});
+if(!d.marks.length)t.insertRow().insertCell().textContent="Nobody yet."}catch(e){}}
+poll();setInterval(poll,1000);
+</script>
+{% else %}
+<div class="card"><form class="row" method="post" action="{{ url_for('live_start') }}">
+<input type="hidden" name="csrf" value="{{ csrf_token() }}">
+<label>Class<br><select name="class_id" id="cls" required>{% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></label>
+<label>Subject<br><select name="subject_id" id="sub" required></select></label>
+<button {{ 'disabled' if not subjects }}>Start session</button></form>
+{% if not subjects %}<p class="muted">Create a class and subject under <a href="{{ url_for('classes') }}">Classes</a> first.</p>{% endif %}
+<p class="muted">Uses the webcam on this computer. Restarting the same class + subject on the same day continues the same session.</p></div>
+<script>
+const subs={{ subjects|tojson }};const cls=document.getElementById("cls"),sub=document.getElementById("sub");
+function fill(){sub.innerHTML="";subs.filter(s=>String(s.class_id)===cls.value).forEach(s=>sub.add(new Option(s.name,s.id)))}
+cls.onchange=fill;fill();
+</script>
+{% endif %}{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% block content %}
+<h2>Enroll a person</h2>
+{% if live %}<div class="flash error">A live session is using the camera. Stop it first, or the browser may not get the webcam.</div>{% endif %}
+{% if not classes %}<div class="card">Create a class first under <a href="{{ url_for('classes') }}">Classes</a>.</div>{% else %}
+<div class="two"><div class="card">
+<p><label>ID (roll / employee no.)<br><input id="uid" style="width:100%"></label></p>
+<p><label>Full name<br><input id="name" style="width:100%"></label></p>
+<p><label>Class<br><select id="cls" style="width:100%">{% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></label></p>
+<button id="camBtn">1. Start camera</button> <button id="capBtn" disabled>2. Capture 30 photos</button>
+<p id="msg" class="muted">Fill the form, start the camera, then capture.</p></div>
+<div class="card"><video id="v" class="feed" autoplay playsinline muted></video><canvas id="c" hidden></canvas></div></div>
+<script>
+const $=id=>document.getElementById(id),N=30,csrf=document.querySelector('meta[name=csrf]').content;
+const tips=["Look straight at the camera","Turn slightly left","Turn slightly right","Tilt up a little","Tilt down a little","Look straight again"];
+let stream;
+$("camBtn").onclick=async()=>{try{stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480}});
+$("v").srcObject=stream;$("capBtn").disabled=false;$("msg").textContent="Camera ready."}
+catch(e){$("msg").textContent="Cannot open camera: "+e.message}};
+$("capBtn").onclick=async()=>{
+ if(!$("uid").value.trim()||!$("name").value.trim()){$("msg").textContent="Enter ID and name first.";return}
+ $("capBtn").disabled=true;const v=$("v"),c=$("c");c.width=v.videoWidth;c.height=v.videoHeight;const frames=[];
+ for(let i=0;i<N;i++){c.getContext("2d").drawImage(v,0,0);frames.push(c.toDataURL("image/jpeg",0.8));
+  $("msg").textContent=tips[Math.floor(i/N*tips.length)]+"  ("+(i+1)+"/"+N+")";await new Promise(r=>setTimeout(r,300))}
+ $("msg").textContent="Processing faces… this can take 10–30 seconds.";
+ try{const r=await fetch("{{ url_for('api_enroll') }}",{method:"POST",headers:{"Content-Type":"application/json","X-CSRF":csrf},
+  body:JSON.stringify({id:$("uid").value.trim(),name:$("name").value.trim(),class_id:$("cls").value,frames})});
+  const d=await r.json();
+  if(d.ok){$("msg").innerHTML="✅ Enrolled with "+d.samples+" samples. "+(d.temp_password?"<br><b>Student login:</b> ID <code>"+$("uid").value.trim()+"</code> · temporary password <code>"+d.temp_password+"</code><br><small>Shown once – give it to the student (they must change it). You can reset it later under Users.</small><br>":"")+"<a href='{{ url_for('users') }}'>View users</a>";
+   if(stream)stream.getTracks().forEach(t=>t.stop())}
+  else{$("msg").textContent="❌ "+d.error;$("capBtn").disabled=false}}
+ catch(e){$("msg").textContent="Upload failed: "+e.message;$("capBtn").disabled=false}};
+</script>{% endif %}{% endblock %}

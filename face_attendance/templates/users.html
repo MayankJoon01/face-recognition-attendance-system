@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block content %}
+<h2>Enrolled users</h2>
+<div class="card"><form class="row" method="get"><select name="class_id" onchange="this.form.submit()">
+<option value="">All classes</option>{% for c in classes %}<option value="{{ c.id }}" {{ 'selected' if c.id==cid }}>{{ c.name }}</option>{% endfor %}</select>
+<a class="btn" href="{{ url_for('enroll') }}">+ Enroll new</a></form><br>
+<table><tr><th>ID</th><th>Name</th><th>Class</th><th>Samples</th><th>Telegram</th><th></th></tr>
+{% for u in users %}<tr><td>{{ u.id }}</td><td>{{ u.name }}</td><td>{{ u.class_name or '-' }}</td><td>{{ u.samples }}</td><td>{{ 'linked' if u.telegram_chat_id else '-' }}</td>
+<td style="white-space:nowrap"><form method="post" action="{{ url_for('reset_password', uid=u.id) }}" style="display:inline" onsubmit="return confirm('Generate a new temporary password for this student?')"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="alt" style="background:transparent;color:var(--accent);border:1px solid var(--accent)">Reset password</button></form>
+<form method="post" action="{{ url_for('delete_user', uid=u.id) }}" onsubmit="return confirm('Delete this user and all face data?')">
+<input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="danger">Delete</button></form></td></tr>
+{% else %}<tr><td colspan="6" class="muted">No users.</td></tr>{% endfor %}</table></div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block content %}
+<h2>{{ sess.class_name }} · {{ sess.subject_name }}</h2>
+<p class="muted">{{ sess.date }} · <a href="{{ url_for('sessions_page') }}">all sessions</a></p>
+{% if live %}<div class="flash error">This session is live. Changes still apply, but the roster won't auto-refresh.</div>{% endif %}
+<div class="card"><table><tr><th>ID</th><th>Name</th><th>Status</th><th>Override</th></tr>
+{% for r in roster %}<tr><td>{{ r.id }}</td><td>{{ r.name }}</td>
+<td>{% if r.time %}<span class="pill">Present {{ r.time }}{% if r.source == 'manual' %} · manual{% endif %}</span>{% if r.note %}<br><small class="muted">{{ r.note }}</small>{% endif %}
+{% else %}<span class="low-t">Absent</span>{% endif %}</td>
+<td><form class="row" method="post" action="{{ url_for('session_mark', sid=sess.id) }}">
+<input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="uid" value="{{ r.id }}">
+<input name="note" placeholder="{{ 'Reason (optional)' if r.time else 'Note, e.g. camera missed' }}" maxlength="200">
+{% if r.time %}<button name="action" value="absent" class="danger">Mark absent</button>
+{% else %}<button name="action" value="present">Mark present</button>{% endif %}</form></td></tr>
+{% else %}<tr><td colspan="4" class="muted">No students in this class.</td></tr>{% endfor %}</table></div>
+{% endblock %}

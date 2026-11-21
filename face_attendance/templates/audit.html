@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block content %}
+<h2>Audit log</h2>
+<div class="card"><p class="muted">Who changed what: manual attendance edits, enrollments, deletions, password resets.</p>
+<table><tr><th>Time</th><th>Admin</th><th>Action</th><th>Details</th></tr>
+{% for r in rows %}<tr><td>{{ r.time.replace('T',' ') }}</td><td>{{ r.actor }}</td><td><span class="pill">{{ r.action }}</span></td><td>{{ r.detail }}</td></tr>
+{% else %}<tr><td colspan="4" class="muted">Nothing logged yet.</td></tr>{% endfor %}</table></div>
+{% endblock %}

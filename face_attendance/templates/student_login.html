@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block content %}
+<div class="card login"><h2>Student login</h2>
+<form method="post"><input type="hidden" name="csrf" value="{{ csrf_token() }}">
+<p><label>Your ID (roll number)<br><input name="uid" required autofocus style="width:100%"></label></p>
+<p><label>Password<br><input type="password" name="password" required style="width:100%"></label></p>
+<button>Sign in</button></form>
+<p class="muted">Your teacher gives you a temporary password when you are enrolled.</p>
+<p><a href="{{ url_for('login') }}">Admin login</a></p></div>
+{% endblock %}

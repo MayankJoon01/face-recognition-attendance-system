@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% block content %}
+<h2>Dashboard – {{ s.today }}</h2>
+<div class="stats">
+<div class="card stat"><span class="muted">Check-ins today</span><b>{{ s.checkins }}</b></div>
+<div class="card stat"><span class="muted">Sessions today</span><b>{{ s.sessions }}</b></div>
+<div class="card stat"><span class="muted">Enrolled</span><b>{{ s.enrolled }}</b></div>
+<div class="card stat"><span class="muted">Unknown faces today</span><b>{{ s.unknown }}</b></div>
+</div>
+<div class="card">
+{% if live %}<span class="pill">LIVE</span> {{ sess.class_name }} · {{ sess.subject_name }} – <a href="{{ url_for('live') }}">open live view</a>
+{% else %}No live session. <a href="{{ url_for('live') }}">Start one</a>{% endif %}</div>
+<div class="card"><h3>Recent check-ins</h3>
+<table><tr><th></th><th>Time</th><th>Name</th><th>Class</th><th>Subject</th></tr>
+{% for r in s.recent %}<tr><td>{% if r.snapshot %}<img class="thumb" src="{{ url_for('snapshot', name=r.snapshot) }}">{% endif %}</td>
+<td>{{ r.time }}</td><td>{{ r.name }}</td><td>{{ r.class_name }}</td><td>{{ r.subject_name }}</td></tr>
+{% else %}<tr><td colspan="5" class="muted">No check-ins yet today.</td></tr>{% endfor %}</table></div>
+{% endblock %}

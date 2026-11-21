@@ -1,0 +1,12 @@
+.git
+.env
+.env.*
+.secret_key
+venv
+.venv
+__pycache__
+*.py[cod]
+*.db
+*.sqlite
+*.sqlite3
+snapshots

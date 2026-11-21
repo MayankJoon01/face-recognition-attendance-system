@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% block content %}
+<h2>Hi, {{ d.user.name }}</h2>
+<p class="muted">{{ d.user.id }} · {{ d.user.class_name or 'No class assigned' }}</p>
+<div class="stats">
+<div class="card stat"><span class="muted">Overall attendance</span><b class="{{ 'low-t' if d.total and d.pct < threshold }}">{{ d.pct }}%</b>
+<div class="bar"><i class="{{ 'low' if d.pct < threshold }}" style="width:{{ d.pct }}%"></i></div></div>
+<div class="card stat"><span class="muted">Present</span><b>{{ d.present }}</b></div>
+<div class="card stat"><span class="muted">Absent</span><b>{{ d.total - d.present }}</b></div></div>
+{% if d.total and d.pct < threshold %}<div class="flash error">Your attendance is below {{ threshold }}%. Please speak to your teacher.</div>{% endif %}
+<div class="card"><h3>By subject</h3><table><tr><th>Subject</th><th>Present</th><th>%</th><th></th></tr>
+{% for s in d.subjects %}<tr><td>{{ s.subject }}</td><td>{{ s.present }}/{{ s.total }}</td>
+<td class="{{ 'low-t' if s.pct < threshold }}">{{ s.pct }}%</td><td><div class="bar"><i class="{{ 'low' if s.pct < threshold }}" style="width:{{ s.pct }}%"></i></div></td></tr>
+{% else %}<tr><td colspan="4" class="muted">No sessions recorded yet.</td></tr>{% endfor %}</table></div>
+<div class="two">
+<div class="card"><h3>Recent attendance</h3><table>
+{% for r in d.records %}<tr><td>{{ r.date }}</td><td>{{ r.subject }}</td><td>{{ r.time }}</td><td>{% if r.source == 'manual' %}<span class="pill">by teacher</span>{% endif %}</td></tr>
+{% else %}<tr><td class="muted">Nothing yet.</td></tr>{% endfor %}</table></div>
+<div class="card"><h3>Absent on</h3><table>
+{% for r in d.absent %}<tr><td>{{ r.date }}</td><td>{{ r.subject }}</td></tr>
+{% else %}<tr><td class="muted">No absences 🎉</td></tr>{% endfor %}</table></div></div>
+<div class="card"><h3>Telegram alerts</h3>
+{% if not bot_on %}<p class="muted">The Telegram bot is not enabled on this system.</p>
+{% elif d.linked %}<p>✅ Connected. Send <b>/attendance</b> or <b>/today</b> to the bot any time.</p>
+<form method="post" action="{{ url_for('student_unlink') }}"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="danger">Disconnect</button></form>
+{% else %}
+{% if d.link_code %}<p>Open Telegram{% if bot %} and message <b>@{{ bot }}</b>{% endif %}, then send:</p>
+<p style="font-size:22px"><b>/link {{ d.link_code }}</b></p><p class="muted">Code expires in 15 minutes.</p>
+{% else %}<p>Get instant attendance alerts and check your percentage from Telegram.</p>{% endif %}
+<form method="post" action="{{ url_for('student_link_code') }}"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button>{{ 'New code' if d.link_code else 'Connect Telegram' }}</button></form>
+{% endif %}</div>
+{% endblock %}

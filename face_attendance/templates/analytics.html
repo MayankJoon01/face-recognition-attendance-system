@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% block content %}
+<h2>Analytics</h2>
+{% if not classes %}<div class="card">Create a class first.</div>{% else %}
+<div class="card"><form class="row" method="get">
+<label>Class<br><select name="class_id">{% for c in classes %}<option value="{{ c.id }}" {{ 'selected' if c.id==f.class_id }}>{{ c.name }}</option>{% endfor %}</select></label>
+<label>Subject<br><select name="subject_id"><option value="">All</option>{% for s in subjects if s.class_id==f.class_id %}<option value="{{ s.id }}" {{ 'selected' if s.id==f.subject_id }}>{{ s.name }}</option>{% endfor %}</select></label>
+<label>From<br><input type="date" name="start" value="{{ f.start }}"></label>
+<label>To<br><input type="date" name="end" value="{{ f.end }}"></label>
+<button>Apply</button><a class="btn" href="{{ url_for('report_pdf', class_id=f.class_id, subject_id=f.subject_id or '', start=f.start, end=f.end) }}">PDF report</a>
+</form></div>
+{% if stats %}
+{% set low = stats.students|selectattr('pct','lt',threshold)|list %}
+<div class="stats">
+<div class="card stat"><span class="muted">Sessions held</span><b>{{ stats.total_sessions }}</b></div>
+<div class="card stat"><span class="muted">Students</span><b>{{ stats.students|length }}</b></div>
+<div class="card stat"><span class="muted">Class average</span><b>{{ stats.avg }}%</b></div>
+<div class="card stat"><span class="muted">Below {{ threshold }}%</span><b class="{{ 'low-t' if low }}">{{ low|length }}</b></div></div>
+{% if stats.total_sessions %}
+<div class="two"><div class="card"><h3>Attendance % per student</h3><canvas id="c1"></canvas></div>
+<div class="card"><h3>Daily attendance %</h3><canvas id="c2"></canvas></div></div>{% endif %}
+<div class="card"><h3>Students</h3><table><tr><th>ID</th><th>Name</th><th>Present</th><th>%</th><th></th></tr>
+{% for r in stats.students|sort(attribute='pct') %}<tr><td>{{ r.id }}</td><td>{{ r.name }}</td><td>{{ r.present }}/{{ r.total }}</td>
+<td class="{{ 'low-t' if r.pct < threshold }}">{{ r.pct }}%</td><td><div class="bar"><i class="{{ 'low' if r.pct < threshold }}" style="width:{{ r.pct }}%"></i></div></td></tr>
+{% else %}<tr><td colspan="5" class="muted">No students in this class.</td></tr>{% endfor %}</table>
+{% if low %}<p class="low-t">⚠ {{ low|length }} student(s) below {{ threshold }}%: {{ low|map(attribute='name')|join(', ') }}</p>{% endif %}</div>
+{% if stats.total_sessions %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+const st={{ stats.students|tojson }},dl={{ stats.daily|tojson }},T={{ threshold }};
+const txt=getComputedStyle(document.body).color;Chart.defaults.color=txt;
+new Chart(document.getElementById("c1"),{type:"bar",data:{labels:st.map(s=>s.name),datasets:[{data:st.map(s=>s.pct),
+ backgroundColor:st.map(s=>s.pct<T?"#dc2626":"#2563eb")}]},options:{plugins:{legend:{display:false}},scales:{y:{min:0,max:100}}}});
+new Chart(document.getElementById("c2"),{type:"line",data:{labels:dl.map(d=>d.date),datasets:[{data:dl.map(d=>d.pct),borderColor:"#2563eb",tension:.25,fill:false}]},
+ options:{plugins:{legend:{display:false}},scales:{y:{min:0,max:100}}}});
+</script>{% endif %}{% endif %}{% endif %}{% endblock %}

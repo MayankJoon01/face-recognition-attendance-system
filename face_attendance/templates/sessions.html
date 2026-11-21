@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block content %}
+<h2>Sessions &amp; manual override</h2>
+<div class="card"><h3>Open or create a session by date</h3>
+<p class="muted">Use this to fix a missed detection or record a class where the camera wasn't used.</p>
+<form class="row" method="post" action="{{ url_for('session_new') }}"><input type="hidden" name="csrf" value="{{ csrf_token() }}">
+<label>Class<br><select name="class_id" id="cls">{% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></label>
+<label>Subject<br><select name="subject_id" id="sub"></select></label>
+<label>Date<br><input type="date" name="date" value="{{ today }}" max="{{ today }}"></label>
+<button>Open</button></form></div>
+<div class="card"><table><tr><th>Date</th><th>Class</th><th>Subject</th><th>Present</th><th></th></tr>
+{% for r in rows %}<tr><td>{{ r.date }}</td><td>{{ r.class_name }}</td><td>{{ r.subject_name }}</td><td>{{ r.present }}/{{ r.total }}</td>
+<td><a class="btn alt" href="{{ url_for('session_detail', sid=r.id) }}">Edit</a></td></tr>
+{% else %}<tr><td colspan="5" class="muted">No sessions yet.</td></tr>{% endfor %}</table></div>
+<script>const subs={{ subjects|tojson }};const cls=document.getElementById("cls"),sub=document.getElementById("sub");
+function fill(){sub.innerHTML="";subs.filter(s=>String(s.class_id)===cls.value).forEach(s=>sub.add(new Option(s.name,s.id)))}cls.onchange=fill;fill();</script>
+{% endblock %}
