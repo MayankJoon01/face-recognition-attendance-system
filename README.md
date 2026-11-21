@@ -21,7 +21,7 @@ Other OS: `pip install dlib` needs CMake + a C++ compiler; then `pip install -r 
 
 Deploy this repository as a Dockerfile-based service. The included Dockerfile installs the Linux build dependencies for dlib and runs the Flask app with Gunicorn.
 
-1. Set the service's **Root Directory** to `/face_attendance` (the app and Dockerfile are in this subdirectory).
+1. Use the repository root as the service's **Root Directory** (the default; change it from `/face_attendance` if previously configured).
 2. Attach a Railway volume to the service at `/data`.
 3. Set `DATA_DIR=/data` and `SESSION_SECRET` to a long, random secret in Railway's Variables settings.
 4. Optionally set `TELEGRAM_BOT_TOKEN` if using Telegram.

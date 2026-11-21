@@ -1,4 +1,3 @@
-
 # Python
 __pycache__/
 *.py[cod]
@@ -36,5 +35,3 @@ snapshots/
 # OS files
 .DS_Store
 Thumbs.db
-venv/
-run.bat
